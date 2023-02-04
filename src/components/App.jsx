@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGalery/ImageGallery';
@@ -10,88 +10,77 @@ import { searchImages } from '../shared/services/gallery-api';
 
 import styles from './app.module.css';
 
-export class App extends Component {
-  state = {
-    search: '',
-    items: [],
-    loading: false,
-    error: null,
-    page: 1,
-    showModal: false,
-    imageDetails: '',
-    hitsQuantity: null,
-  };
+const App = () => {
+  const [search, setSearch] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [imageDetails, setImageDetails] = useState('');
+  const [hitsQuantity, setHitsQuantity] = useState(null);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { search, page } = this.state;
-    if (prevState.search !== search || prevState.page !== page) {
-      this.fetchImages();
+  useEffect(() => {
+    if (search) {
+      const fetchImages = async () => {
+        try {
+          setLoading(true);
+          const data = await searchImages(search, page);
+          data.hits.length === 0
+            ? setError('Not found')
+            : setItems(prevItems => [...prevItems, ...data.hits]);
+          setHitsQuantity(data.totalHits);
+          console.log(data);
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchImages();
     }
-  }
+  }, [search, page, setLoading, setError, setItems, setHitsQuantity]);
 
-  async fetchImages() {
-    try {
-      this.setState({ loading: true });
-      const { search, page } = this.state;
-      const data = await searchImages(search, page);
-      data.hits.length === 0
-        ? this.setState({ error: 'Not found' })
-        : this.setState(({ items }) => ({ items: [...items, ...data.hits] }));
-      this.setState({ hitsQuantity: data.totalHits });
-    } catch (error) {
-      this.setState({ error: error.message });
-    } finally {
-      this.setState({ loading: false });
-    }
-  }
-
-  searchPictures = ({ search }) => {
-    this.setState({
-      search,
-      items: [],
-      page: 1,
-      error: null,
-      hitsQuantity: null,
-    });
+  const onSearchPictures = ({ search }) => {
+    setSearch(search);
+    setItems([]);
+    setPage(1);
+    setError(null);
+    setHitsQuantity(null);
   };
 
-  loadMore = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
+  const showImage = largeImageURL => {
+    setImageDetails(largeImageURL);
+    setShowModal(true);
   };
 
-  showImage = largeImageURL => {
-    this.setState({ showModal: true, imageDetails: largeImageURL });
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  closeModal = () => {
-    this.setState({
-      showModal: false,
-      imageDetails: null,
-    });
+  const closeModal = () => {
+    setShowModal(false);
+    setImageDetails(null);
   };
 
-  render() {
-    const { items, loading, error, showModal, imageDetails, hitsQuantity } =
-      this.state;
-    const { searchPictures, loadMore, showImage, closeModal } = this;
+  return (
+    <>
+      <Searchbar onSubmit={onSearchPictures} />
+      {items.length !== 0 && (
+        <ImageGallery items={items} showImage={showImage} />
+      )}
+      {loading && <Loader />}
+      {error && <p className={styles.errorMessage}>{error}</p>}
+      {hitsQuantity > items.length && !loading && (
+        <Button onloadMore={loadMore} />
+      )}
+      {showModal && (
+        <Modal close={closeModal}>
+          <img src={imageDetails} alt="" />
+        </Modal>
+      )}
+    </>
+  );
+};
 
-    return (
-      <>
-        <Searchbar onSubmit={searchPictures} />
-        {items.length !== 0 && (
-          <ImageGallery items={items} showImage={showImage} />
-        )}
-        {loading && <Loader />}
-        {error && <p className={styles.errorMessage}>{error}</p>}
-        {hitsQuantity > items.length && !loading && (
-          <Button onloadMore={loadMore} />
-        )}
-        {showModal && (
-          <Modal close={closeModal}>
-            <img src={imageDetails} alt="" />
-          </Modal>
-        )}
-      </>
-    );
-  }
-}
+export default App;
