@@ -30,7 +30,6 @@ const App = () => {
             ? setError('Not found')
             : setItems(prevItems => [...prevItems, ...data.hits]);
           setHitsQuantity(data.totalHits);
-          console.log(data);
         } catch (error) {
           setError(error.message);
         } finally {
