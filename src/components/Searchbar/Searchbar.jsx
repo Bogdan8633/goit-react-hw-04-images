@@ -1,59 +1,52 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { ImSearch } from 'react-icons/im';
 import PropTypes from 'prop-types';
+
+import initialState from './initialState';
+
 import styles from './searchbar.module.css';
 
-class Searchbar extends Component {
-  state = {
-    search: '',
-  };
+const Searchbar = ({ onSubmit }) => {
+  const [state, setState] = useState({ ...initialState });
 
-  handleChange = ({ target }) => {
+  const handleChange = ({ target }) => {
     const { name, value } = target;
-    this.setState({ [name]: value });
-  };
-
-  handleSubmit = e => {
-    e.preventDefault();
-    const { onSubmit } = this.props;
-    onSubmit({ ...this.state });
-    this.reset();
-  };
-
-  reset() {
-    this.setState({
-      search: '',
+    setState(prevState => {
+      return { ...prevState, [name]: value };
     });
-  }
+  };
 
-  render() {
-    const { search } = this.state;
-    const { handleChange, handleSubmit } = this;
+  const handleSubmit = e => {
+    e.preventDefault();
+    onSubmit({ ...state });
+    setState({ ...initialState });
+  };
 
-    return (
-      <header className={styles.Searchbar}>
-        <form className={styles.SearchForm} onSubmit={handleSubmit}>
-          <button type="submit" className={styles.SearchFormButton}>
-            <span className={styles.SearchFormButtonLabel}>Search</span>
-            <ImSearch />
-          </button>
+  const { search } = state;
 
-          <input
-            name="search"
-            value={search}
-            className={styles.SearchFormInput}
-            type="text"
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            required
-            onChange={handleChange}
-          />
-        </form>
-      </header>
-    );
-  }
-}
+  return (
+    <header className={styles.Searchbar}>
+      <form className={styles.SearchForm} onSubmit={handleSubmit}>
+        <button type="submit" className={styles.SearchFormButton}>
+          <span className={styles.SearchFormButtonLabel}>Search</span>
+          <ImSearch />
+        </button>
+
+        <input
+          name="search"
+          value={search}
+          className={styles.SearchFormInput}
+          type="text"
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          required
+          onChange={handleChange}
+        />
+      </form>
+    </header>
+  );
+};
 
 export default Searchbar;
 
