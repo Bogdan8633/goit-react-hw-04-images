@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGalery/ImageGallery';
@@ -40,27 +40,27 @@ const App = () => {
     }
   }, [search, page, setLoading, setError, setItems, setHitsQuantity]);
 
-  const onSearchPictures = ({ search }) => {
+  const onSearchPictures = useCallback(({ search }) => {
     setSearch(search);
     setItems([]);
     setPage(1);
     setError(null);
     setHitsQuantity(null);
-  };
+  }, []);
 
-  const showImage = largeImageURL => {
+  const showImage = useCallback(largeImageURL => {
     setImageDetails(largeImageURL);
     setShowModal(true);
-  };
+  }, []);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setPage(prevPage => prevPage + 1);
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setShowModal(false);
     setImageDetails(null);
-  };
+  }, []);
 
   return (
     <>
